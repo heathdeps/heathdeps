@@ -36,7 +36,7 @@ jobs:
         run: ${{ matrix.cmakeCommand }} --build . --config Release --target jxl
       # all artifacts are in build/lib/Release
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jxl-${{ matrix.platform }}
           path: build/lib/Release

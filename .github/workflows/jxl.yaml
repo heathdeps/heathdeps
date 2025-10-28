@@ -12,14 +12,14 @@ jobs:
             os: ubuntu-latest
             generator: "Ninja Multi-Config"
             cmakeCommand: "cmake"
-          #- platform: MacOS
-          #  os: macos-latest
-          #  generator: "Ninja Multi-Config"
-          #  cmakeCommand: "xcrun cmake"
-          #- platform: Win64
-          #  os: windows-latest
-          #  generator: "Visual Studio 17 2022"
-          #  cmakeCommand: "cmake"
+          - platform: MacOS
+            os: macos-latest
+            generator: "Ninja Multi-Config"
+            cmakeCommand: "xcrun cmake"
+          - platform: Win64
+            os: windows-latest
+            generator: "Visual Studio 17 2022"
+            cmakeCommand: "cmake"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -31,7 +31,7 @@ jobs:
       - name: Configure CMake
         working-directory: build
         run: ${{ matrix.cmakeCommand }} -G "${{ matrix.generator }}" -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF ..
-      - name: Build
+      - name: Build (non-Windows)
         working-directory: build
         if: matrix.platform != 'Win64'
         run: ${{ matrix.cmakeCommand }} --build . --config Release --target jxl -- -j$(nproc)

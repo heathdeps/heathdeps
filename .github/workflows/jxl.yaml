@@ -31,10 +31,14 @@ jobs:
       - name: Configure CMake
         working-directory: build
         run: ${{ matrix.cmakeCommand }} -G "${{ matrix.generator }}" -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF ..
-      - name: Build (non-Windows)
+      - name: Build (Linux)
         working-directory: build
-        if: matrix.platform != 'Win64'
+        if: matrix.platform == 'Linux64'
         run: ${{ matrix.cmakeCommand }} --build . --config Release --target jxl -- -j$(nproc)
+      - name: Build (macOS)
+        working-directory: build
+        if: matrix.platform == 'MacOS'
+        run: ${{ matrix.cmakeCommand }} --build . --config Release --target jxl -- -j$(sysctl -n hw.logicalcpu)
       - name: Build (Windows)
         working-directory: build
         if: matrix.platform == 'Win64'

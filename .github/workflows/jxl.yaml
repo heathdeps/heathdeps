@@ -22,7 +22,6 @@ jobs:
           #  cmakeCommand: "cmake"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: oras-project/setup-oras@v1
       - uses: actions/checkout@v3
         with:
           repository: libjxl/libjxl
@@ -34,16 +33,17 @@ jobs:
         run: ${{ matrix.cmakeCommand }} -G "${{ matrix.generator }}" -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF ..
       - name: Build
         working-directory: build
+        if: matrix.platform != 'Win64'
+        run: ${{ matrix.cmakeCommand }} --build . --config Release --target jxl -- -j$(nproc)
+      - name: Build (Windows)
+        working-directory: build
+        if: matrix.platform == 'Win64'
         run: ${{ matrix.cmakeCommand }} --build . --config Release --target jxl
       # all artifacts are in build/lib/Release
+      - name: Create tarball
+        run: tar -czf jxl-${{ matrix.platform }}.tar.gz -C ./build/lib/Release/ .
       - name: Upload to B2
-        uses: jakejarvis/s3-sync-action@master
-        with: 
-          args: --acl public-read --follow-symlinks
+        run: aws s3 cp jxl-${{ matrix.platform }}.tar.gz s3://heathdeps/v0/jxl/${{ matrix.platform }}/${{ github.run_id }}.tar.gz --endpoint-url ${{ vars.B2_ENDPOINT }}
         env:
-          AWS_S3_BUCKET: heathdeps
           AWS_ACCESS_KEY_ID: ${{ secrets.B2_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_KEY }}
-          AWS_S3_ENDPOINT: ${{ vars.B2_ENDPOINT }}
-          SOURCE_DIR: "./build/lib/Release/"
-          DEST_DIR: "jxl/${{ matrix.platform }}/${{ github.run_id }}/"

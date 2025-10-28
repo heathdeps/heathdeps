@@ -1,0 +1,42 @@
+name: JPEG-XL
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - platform: Linux64
+            os: ubuntu-latest
+            generator: "Ninja Multi-Config"
+            cmakeCommand: "cmake"
+          - platform: MacOS
+            os: macos-latest
+            generator: "Ninja Multi-Config"
+            cmakeCommand: "xcrun cmake"
+          - platform: Win64
+            os: windows-latest
+            generator: "Visual Studio 17 2022"
+            cmakeCommand: "cmake"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: libjxl/libjxl
+          submodules: 'recursive'
+      - name: Create build directory
+        run: mkdir build
+      - name: Configure CMake
+        working-directory: build
+        run: ${{ matrix.cmakeCommand }} -G "${{ matrix.generator }}" -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF ..
+      - name: Build
+        working-directory: build
+        run: ${{ matrix.cmakeCommand }} --build . --config Release --target jxl
+      # all artifacts are in build/lib/Release
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: jxl-${{ matrix.platform }}
+          path: build/lib/Release
